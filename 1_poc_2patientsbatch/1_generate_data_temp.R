@@ -11,8 +11,7 @@ DEBUG <- FALSE
 # 2. batch effect
 #############################
 
-generate_batch_effect <- function(index){
-
+generate_batch_effect <- function(index) {
   backbone <- backbone_bifurcating()
 
   config <-
@@ -29,7 +28,7 @@ generate_batch_effect <- function(index){
       )
     )
 
-  if(DEBUG){
+  if (DEBUG) {
     config <-
       initialise_model(
         backbone = backbone,
@@ -67,30 +66,41 @@ generate_batch_effect <- function(index){
   model_a <- model_a %>% generate_experiment()
   dataset_a <- model_a %>% as_dyno()
 
-  a1 <- dataset_a$milestone_percentages %>% filter(milestone_id == "sA") 
-  a1 <- a1[order(a1[,"percentage"]),][1,1]$cell_id
+  a1 <- dataset_a$milestone_percentages %>% filter(milestone_id == "sA")
+  a1 <- a1[order(a1[, "percentage"]), ][1, 1]$cell_id
   adata_ds <- as_anndata(model_a)
   adata_ds$obs[["model"]] <- dataset_a$cell_info[["model"]]
   adata_ds$obs[["milestones"]] <- dataset_a$progressions$to
   adata_ds$uns[["iroot"]] <- a1
-  anndata::write_h5ad(adata_ds, paste0("dyngen_pooled/data/batcheffect_dataseta", index, ".h5ad"))
+  anndata::write_h5ad(
+    adata_ds,
+    paste0("dyngen_pooled/data/batcheffect_dataseta", index, ".h5ad")
+  )
 
-  saveRDS(dataset_a, paste0("dyngen_pooled/data/batcheffect_dataseta", index, ".rds"))
+  saveRDS(
+    dataset_a,
+    paste0("dyngen_pooled/data/batcheffect_dataseta", index, ".rds")
+  )
 
   model_between2 <- generate_diverging_kinetics(model_a, model_b, 0.99)
 
   dataset_between <- model_between2 %>% as_dyno()
 
   b1 <- dataset_between$milestone_percentages %>% filter(milestone_id == "sA")
-  b1 <- b1[order(b1[,"percentage"]),][1,1]$cell_id
+  b1 <- b1[order(b1[, "percentage"]), ][1, 1]$cell_id
 
   adata_btwn <- as_anndata(model_between2)
   adata_btwn$obs[["model"]] <- dataset_between$cell_info[["model"]]
   adata_btwn$obs[["milestones"]] <- dataset_between$progressions$to
   adata_btwn$uns[["iroot"]] <- b1
-  anndata::write_h5ad(adata_btwn, paste0("dyngen_pooled/data/batcheffect99_datasetb", index, ".h5ad"))
-  saveRDS(dataset_between, paste0("dyngen_pooled/data/batcheffect99_datasetb", index, ".rds"))
-
+  anndata::write_h5ad(
+    adata_btwn,
+    paste0("dyngen_pooled/data/batcheffect99_datasetb", index, ".h5ad")
+  )
+  saveRDS(
+    dataset_between,
+    paste0("dyngen_pooled/data/batcheffect99_datasetb", index, ".rds")
+  )
 }
 
 generate_batch_effect(0)
@@ -98,16 +108,11 @@ generate_batch_effect(1)
 generate_batch_effect(2)
 
 
-
 model_comb2 <-
   combine_models(list(common = model_a, KO = model_between2)) %>%
   generate_experiment()
 data_comb2 <- as_dyno(model_comb2)
 plot_heatmap(data_comb2, features_oi = 50)
-
-
-
-
 
 
 saveRDS(dataset_between, "dyngen_pooled/data/batcheffect99_datasetb.rds")
@@ -121,14 +126,14 @@ plot_heatmap(dataset_between, features_oi = 50)
 # ####
 # # RUN TI methods
 # ####
-# part <- dataset_all$milestone_percentages %>% filter(milestone_id == "left_sA") 
+# part <- dataset_all$milestone_percentages %>% filter(milestone_id == "left_sA")
 # id <- part[order(part[,"percentage"]),][1,1]$cell_id
 # dataset_all <- add_prior_information(dataset_all, start_id = "cell838")
 # dataset_all <- infer_trajectory(dataset_all, ti_paga())
 # plot_dimred(dataset_all, dimred=dyndimred::dimred_umap, label_milestones = T)
 
 # run_ti <- function(dataset, mst_id){
-#   part <- dataset$milestone_percentages %>% filter(milestone_id == mst_id) 
+#   part <- dataset$milestone_percentages %>% filter(milestone_id == mst_id)
 #   id <- part[order(part[,"percentage"]),][1,1]$cell_id
 #   dataset <- add_prior_information(dataset, start_id = id)
 #   infer_trajectory(dataset, ti_paga())
@@ -160,7 +165,7 @@ config <-
     )
   )
 
-if(DEBUG){
+if (DEBUG) {
   config <-
     initialise_model(
       backbone = backbone,
@@ -171,8 +176,8 @@ if(DEBUG){
       verbose = interactive(),
       download_cache_dir = tools::R_user_dir("dyngen", "data"),
       simulation_params = simulation_default(
-        census_interval = 5, 
-        ssa_algorithm = ssa_etl(tau = 300/3600),
+        census_interval = 5,
+        ssa_algorithm = ssa_etl(tau = 300 / 3600),
         experiment_params = simulation_type_wild_type(num_simulations = 10)
       )
     )
@@ -192,7 +197,9 @@ plot_gold_mappings(model_wt, do_facet = FALSE)
 
 backbone$module_info
 plot_backbone_modulenet(model_common)
-b3_genes <- model_common$feature_info %>% filter(module_id == "B3") %>% pull(feature_id)
+b3_genes <- model_common$feature_info %>%
+  filter(module_id == "B3") %>%
+  pull(feature_id)
 plot_backbone_modulenet(model_common)
 
 model_ko <- model_common
@@ -215,10 +222,10 @@ plot_dimred(dataset)
 model_common <- model_common %>% generate_cells()
 
 model_test1 <- model_common
-ft_ids <- model_test1$feature_info[c(24, 26),]$feature_id
-ft_ids2 <- model_test1$feature_info[c(25, 28),]$feature_id
-model_test1$feature_info[c(25, 28),]$feature_id <- ft_ids
-model_test1$feature_info[c(24, 26),]$feature_id <- ft_ids2
+ft_ids <- model_test1$feature_info[c(24, 26), ]$feature_id
+ft_ids2 <- model_test1$feature_info[c(25, 28), ]$feature_id
+model_test1$feature_info[c(25, 28), ]$feature_id <- ft_ids
+model_test1$feature_info[c(24, 26), ]$feature_id <- ft_ids2
 
 model_test1$simulation_params$experiment_params <- simulation_type_knockdown(
   num_simulations = 100L,
