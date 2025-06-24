@@ -15,7 +15,6 @@ DEBUG <- FALSE
 #############################
 
 generate_batch_effect <- function(index) {
-
   backbone <- backbone_bifurcating()
 
   config <-
@@ -80,12 +79,14 @@ generate_batch_effect <- function(index) {
   adata_ds$uns[["iroot"]] <- a1
 
   anndata::write_h5ad(
-      adata_ds,
-      paste0("1_poc_2patientsbatch/data/dataseta", index, ".h5ad"))
+    adata_ds,
+    paste0("1_poc_2patientsbatch/data/dataseta", index, ".h5ad")
+  )
 
   saveRDS(
-      dataset_a,
-      paste0("1_poc_2patientsbatch/data/dataseta", index, ".rds"))
+    dataset_a,
+    paste0("1_poc_2patientsbatch/data/dataseta", index, ".rds")
+  )
 
   # Generate the experiment for model b and convert to dyno dataset
   # Use diverging kinetics to introduce batch effect
@@ -101,13 +102,14 @@ generate_batch_effect <- function(index) {
   adata_btwn$obs[["milestones"]] <- dataset_between$progressions$to
   adata_btwn$uns[["iroot"]] <- b1
   anndata::write_h5ad(
-      adata_btwn,
-      paste0("1_poc_2patientsbatch/data/datasetb", index, ".h5ad"))
+    adata_btwn,
+    paste0("1_poc_2patientsbatch/data/datasetb", index, ".h5ad")
+  )
 
   saveRDS(
-      dataset_between,
-      paste0("1_poc_2patientsbatch/data/datasetb", index, ".rds"))
-
+    dataset_between,
+    paste0("1_poc_2patientsbatch/data/datasetb", index, ".rds")
+  )
 }
 
 generate_batch_effect(0)
