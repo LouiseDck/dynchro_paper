@@ -58,17 +58,10 @@ anndataR::write_h5ad(
 scgen2 <- anndataR::read_h5ad("1_poc_2patientsbatch/data/scgen2.h5ad")
 sce_scgen2 <- scgen2$as_SingleCellExperiment()
 
-scgen2_result <- slingshot::slingshot(
-  sce_scgen2,
-  cl = scgen2$obs$leiden1,
-  reducedDim = "corrected_latent",
-  start.clus = 2,
-  end.clus = c(3, 5)
-)
-colData(scgen2_result)$slingshot <- c()
-# scgen2_ad_res <- anndataR::from_SingleCellExperiment(scgen2_result)
+scgen2_res <- run_slingshot(sce_scgen2, scgen2, "corrected_latent")
+
 anndataR::write_h5ad(
-  scgen2_result,
+  scgen2_res,
   "1_poc_2patientsbatch/data/scgen2_slingshot.h5ad",
   mode = "w"
 )
