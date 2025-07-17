@@ -125,8 +125,8 @@ def dynchro_wrapper(ad1, ad2, distance_measure="correlation"):
         for lineage2, label2 in zip(lineages[1], ad2.uns["lineage_labels"]):
             # print(lineage2.X.shape, lineage1.X.shape)
             lin1, lin2 = lineage1.X, lineage2.X
-            total_dist, cost, distances = dynchro.tl.skip_dtw(lin1, lin2, distance=distance_measure)
-            path1, path2 = dynchro.tl.skip_traceback(distances)
+            total_dist, cost, distances = dynchro.tl.dtw(lin1, lin2, distance=distance_measure)
+            path1, path2 = dynchro.tl.traceback(distances)
 
             total_dist_norm = total_dist / (lineage1.X.shape[0] + lineage2.X.shape[0])
             total_dist_norm2 = total_dist / len(path1)
