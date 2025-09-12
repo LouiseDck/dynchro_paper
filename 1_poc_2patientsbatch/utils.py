@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy
 import seaborn as sns
+import dynchro
 
 def plot_iroot(data):
     colormap_iroot = np.array(["#C0C0C0"] * data.n_obs)
@@ -95,4 +97,43 @@ def get_kde_eval(vector, bandwith = 0.1, x = 100):
     y_values = kde(x_values)
 
     return x_values, y_values, kde
+
+
+
+def get_kdes_wasserstein(before_bec, after_bec, pseudotimes, split = None, bw = 0.1):
+
+    before_bec_kde = dynchro.tl.get_kde_eval(before_bec, pseudotimes[0], mode = "only_results", bandwidth = bw)
+    after_bec_kde = dynchro.tl.get_kde_eval(after_bec, pseudotimes[1], mode = "only_results", bandwidth = bw)
+
+    wasserstein_total = scipy.stats.wasserstein_distance(
+        before_bec_kde[0], after_bec_kde[0],
+        before_bec_kde[1], after_bec_kde[1]
+    )
+
+    if split is None:
+        return before_bec_kde, after_bec_kde, wasserstein_total
+
+    before_bec_1_x = before_bec_kde[0][before_bec_kde[0] < split]
+    before_bec_1_y = before_bec_kde[1][:len(before_bec_1_x)]
+
+    before_bec_2_x = before_bec_kde[0][before_bec_kde[0] >= split]
+    before_bec_2_y = before_bec_kde[1][:len(before_bec_2_x)]
+
+    after_bec_1_x = after_bec_kde[0][after_bec_kde[0] < split]
+    after_bec_1_y = after_bec_kde[1][-len(after_bec_1_x):]
+
+    after_bec_2_x = after_bec_kde[0][after_bec_kde[0] >= split]
+    after_bec_2_y = after_bec_kde[1][-len(after_bec_2_x):]
+
+    wasserstein1 = scipy.stats.wasserstein_distance(
+        before_bec_1_x, after_bec_1_x,
+        before_bec_1_y, after_bec_1_y
+    )
+
+    wasserstein2 = scipy.stats.wasserstein_distance(
+        before_bec_2_x, after_bec_2_x,
+        before_bec_2_y, after_bec_2_y
+    )
+
+    return (before_bec_kde, after_bec_kde, wasserstein1, wasserstein2, wasserstein_total)
 
