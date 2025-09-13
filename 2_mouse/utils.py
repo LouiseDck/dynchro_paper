@@ -262,12 +262,12 @@ def plot_visualization_2D(adata,method='umap',n_neighbors=50, nb_pct=None,perple
             if(is_string_dtype(df_plot[ann])):
                 sc_i=sns.scatterplot(ax=ax_i,
                                     x=method.upper()+'1', y=method.upper()+'2', 
-                                    hue=ann,hue_order = legend_order[ann],
+                                    hue=ann, hue_order = legend_order[ann],
                                     data=df_plot_shuf,
                                     alpha=alpha,linewidth=0,
-                                    palette= adata.uns[ann+'_color'] \
-                                            if (ann+'_color' in adata.uns_keys()) and (set(adata.uns[ann+'_color'].keys()) >= set(np.unique(df_plot_shuf[ann]))) \
-                                            else None
+                                    # palette= adata.uns[ann+'_color'] \
+                                    #         if (ann+'_color' in adata.uns_keys()) and (set(adata.uns[ann+'_color'].keys()) >= set(np.unique(df_plot_shuf[ann]))) \
+                                    #         else None
                                     )
                 legend_handles, legend_labels = ax_i.get_legend_handles_labels()
                 ax_i.legend(handles=legend_handles, labels=legend_labels,
