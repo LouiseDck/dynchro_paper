@@ -1,3 +1,10 @@
 *.npy
 *.h5ad
 *__pycache__*
+
+*/data/*
+
+*.png
+*.pdf
+
+*.pkl

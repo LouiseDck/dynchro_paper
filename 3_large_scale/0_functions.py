@@ -64,6 +64,23 @@ def get_config(trajectories, sort=True):
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+def flatten(values : list) -> list:
+    """
+    Flatten a list of lists into a single list.
+    """
+    flat_list = []
+
+    for sublist in values:
+        if isinstance(sublist, list):
+            # If the item is a list, extend the result with its contents
+            flat_list.extend(sublist)
+        else:
+            # If the item is not a list, append it directly if it is not None
+            if sublist is not None:
+                flat_list.append(sublist)
+
+    return flat_list
+
 
 def plot_cost_distances(cost, distances, path1, path2):
     fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -71,6 +88,9 @@ def plot_cost_distances(cost, distances, path1, path2):
     sns.heatmap(cost, ax=ax1)
     distances = distances[1:, 1:]
     sns.heatmap(distances, ax=ax2)
+    path1 = flatten(path1.values())
+    path2 = flatten(path2.values())
+    print(len(path1), len(path2))
     plt.scatter(path2, path1, c="white", s=3)
     plt.show()
 
@@ -117,22 +137,44 @@ class DTWResult:
 
 def dynchro_wrapper(ad1, ad2, distance_measure="correlation"):
     trajectories = [ad1, ad2]
-    lineages = get_config(trajectories)
+    # lineages = get_config(trajectories)
+
+    common_vars = list(set(ad1.var_names).intersection(set(ad2.var_names)))
+
+    lineages1 = [
+        ad1[ad1.obs[label]][:, common_vars]
+        for label in ad1.uns["lineage_labels"]
+    ]
+
+    lineages2 = [
+        ad2[ad2.obs[label]][:, common_vars]
+        for label in ad2.uns["lineage_labels"]
+    ]
+
+    # sort according to pseudotime_key
+    lineages1 = [lin[lin.obs["pseudotime"].argsort()] for lin in lineages1]
+    lineages2 = [lin[lin.obs["pseudotime"].argsort()] for lin in lineages2]
 
     results = []
 
-    for lineage1, label1 in zip(lineages[0], ad1.uns["lineage_labels"]):
-        for lineage2, label2 in zip(lineages[1], ad2.uns["lineage_labels"]):
+    for lineage1, label1 in zip(lineages1, ad1.uns["lineage_labels"]):
+        for lineage2, label2 in zip(lineages2, ad2.uns["lineage_labels"]):
             # print(lineage2.X.shape, lineage1.X.shape)
-            lin1, lin2 = lineage1.X, lineage2.X
-            total_dist, cost, distances = dynchro.tl.dtw(lin1, lin2, distance=distance_measure)
-            path1, path2 = dynchro.tl.traceback(distances)
+            total_dist, cost, distances_matrix = dynchro.tl.dtw(
+                lineage1, lineage2, distance="euclidean", mode="only_results"
+            )
+            path1, path2 = dynchro.tl.traceback(D = distances_matrix)
+            norm_distance = total_dist / (cost.shape[0] * cost.shape[1])
+
+            # lin1, lin2 = lineage1.X, lineage2.X
+            # total_dist, cost, distances = dynchro.tl.dtw(lin1, lin2, distance=distance_measure)
+            # path1, path2 = dynchro.tl.traceback(distances)
 
             total_dist_norm = total_dist / (lineage1.X.shape[0] + lineage2.X.shape[0])
-            total_dist_norm2 = total_dist / len(path1)
+            # total_dist_norm2 = total_dist / len(path1)
 
             res = DTWResult(
-                label1, label2, cost, distances, path1, path2, total_dist, total_dist_norm, total_dist_norm2
+                label1, label2, cost, distances_matrix, path1, path2, total_dist, total_dist_norm, norm_distance
             )
             results.append(res)
 
