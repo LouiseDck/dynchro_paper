@@ -96,7 +96,7 @@ def plot_cost_distances(cost, distances, path1, path2):
 
 
 class DTWResult:
-    def __init__(self, lin1, lin2, cost, distances, path1, path2, dist, dist_norm, dist_norm_path):
+    def __init__(self, lin1, lin2, cost, distances, path1, path2, dist, dist_norm):
         self._lin1 = lin1
         self._lin2 = lin2
         self._cost = cost
@@ -105,7 +105,7 @@ class DTWResult:
         self._path2 = path2
         self._dist = dist
         self._dist_norm = dist_norm
-        self._dist_norm_path = dist_norm_path
+        # self._dist_norm_path = dist_norm_path
 
     def cost(self):
         return self._cost
@@ -125,9 +125,6 @@ class DTWResult:
     def dist_norm(self):
         return self._dist_norm
 
-    def dist_norm_path(self):
-        return self._dist_norm_path
-
     def get_warping(self):
         return self._path1, self._path2
 
@@ -135,7 +132,7 @@ class DTWResult:
         plot_cost_distances(self._cost, self._distances, self._path1, self._path2)
 
 
-def dynchro_wrapper(ad1, ad2, distance_measure="correlation"):
+def dynchro_wrapper(ad1, ad2, diag_mult, distance_measure="correlation"):
     trajectories = [ad1, ad2]
     # lineages = get_config(trajectories)
 
@@ -163,18 +160,18 @@ def dynchro_wrapper(ad1, ad2, distance_measure="correlation"):
             total_dist, cost, distances_matrix = dynchro.tl.dtw(
                 lineage1, lineage2, distance="euclidean", mode="only_results"
             )
-            path1, path2 = dynchro.tl.traceback(D = distances_matrix)
+            path1, path2 = dynchro.tl.traceback(D = distances_matrix, diag_mult=diag_mult)
             norm_distance = total_dist / (cost.shape[0] * cost.shape[1])
 
             # lin1, lin2 = lineage1.X, lineage2.X
             # total_dist, cost, distances = dynchro.tl.dtw(lin1, lin2, distance=distance_measure)
             # path1, path2 = dynchro.tl.traceback(distances)
 
-            total_dist_norm = total_dist / (lineage1.X.shape[0] + lineage2.X.shape[0])
+            # total_dist_norm = total_dist / (lineage1.X.shape[0] + lineage2.X.shape[0])
             # total_dist_norm2 = total_dist / len(path1)
 
             res = DTWResult(
-                label1, label2, cost, distances_matrix, path1, path2, total_dist, total_dist_norm, norm_distance
+                label1, label2, cost, distances_matrix, path1, path2, total_dist, norm_distance
             )
             results.append(res)
 
