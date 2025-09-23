@@ -99,6 +99,33 @@ def get_kde_eval(vector, bandwith = 0.1, x = 100):
     return x_values, y_values, kde
 
 
+def get_cutoff_kde(
+    xs: np.ndarray,
+    ys: np.ndarray,
+    between: tuple[float, float]
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Get the cutoff point for the KDE plot.
+
+    Parameters
+    ----------
+    xs : np.ndarray
+        The x values of the KDE.
+    ys : np.ndarray
+        The y values of the KDE.
+    cutoff : float
+        The cutoff value to apply on the x values.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        The x and y values of the KDE after applying the cutoff.
+    """
+    mask = (xs >= between[0]) & (xs <= between[1])
+
+    return xs[mask], ys[mask]
+
+
 
 def get_kdes_wasserstein(before_bec, after_bec, pseudotimes, split = None, bw = 0.1):
 
@@ -112,28 +139,44 @@ def get_kdes_wasserstein(before_bec, after_bec, pseudotimes, split = None, bw = 
 
     if split is None:
         return before_bec_kde, after_bec_kde, wasserstein_total
+    
+    distr1_before = get_cutoff_kde(before_bec_kde[0], before_bec_kde[1], (0, split))
+    distr2_before = get_cutoff_kde(after_bec_kde[0], after_bec_kde[1], (0, split))
 
-    before_bec_1_x = before_bec_kde[0][before_bec_kde[0] < split]
-    before_bec_1_y = before_bec_kde[1][:len(before_bec_1_x)]
-
-    before_bec_2_x = before_bec_kde[0][before_bec_kde[0] >= split]
-    before_bec_2_y = before_bec_kde[1][:len(before_bec_2_x)]
-
-    after_bec_1_x = after_bec_kde[0][after_bec_kde[0] < split]
-    after_bec_1_y = after_bec_kde[1][-len(after_bec_1_x):]
-
-    after_bec_2_x = after_bec_kde[0][after_bec_kde[0] >= split]
-    after_bec_2_y = after_bec_kde[1][-len(after_bec_2_x):]
-
-    wasserstein1 = scipy.stats.wasserstein_distance(
-        before_bec_1_x, after_bec_1_x,
-        before_bec_1_y, after_bec_1_y
+    wasserstein_before = scipy.stats.wasserstein_distance(
+        distr1_before[0], distr2_before[0],
+        distr1_before[1], distr2_before[1]
     )
 
-    wasserstein2 = scipy.stats.wasserstein_distance(
-        before_bec_2_x, after_bec_2_x,
-        before_bec_2_y, after_bec_2_y
+    distr1_after = get_cutoff_kde(before_bec_kde[0], before_bec_kde[1], (split, 1))
+    distr2_after = get_cutoff_kde(after_bec_kde[0], after_bec_kde[1], (split, 1))
+
+    wasserstein_after = scipy.stats.wasserstein_distance(
+        distr1_after[0], distr2_after[0],
+        distr1_after[1], distr2_after[1]
     )
 
-    return (before_bec_kde, after_bec_kde, wasserstein1, wasserstein2, wasserstein_total)
+    # before_bec_1_x = before_bec_kde[0][before_bec_kde[0] < split]
+    # before_bec_1_y = before_bec_kde[1][:len(before_bec_1_x)]
+
+    # before_bec_2_x = before_bec_kde[0][before_bec_kde[0] >= split]
+    # before_bec_2_y = before_bec_kde[1][:len(before_bec_2_x)]
+
+    # after_bec_1_x = after_bec_kde[0][after_bec_kde[0] < split]
+    # after_bec_1_y = after_bec_kde[1][-len(after_bec_1_x):]
+
+    # after_bec_2_x = after_bec_kde[0][after_bec_kde[0] >= split]
+    # after_bec_2_y = after_bec_kde[1][-len(after_bec_2_x):]
+
+    # wasserstein1 = scipy.stats.wasserstein_distance(
+    #     before_bec_1_x, after_bec_1_x,
+    #     before_bec_1_y, after_bec_1_y
+    # )
+
+    # wasserstein2 = scipy.stats.wasserstein_distance(
+    #     before_bec_2_x, after_bec_2_x,
+    #     before_bec_2_y, after_bec_2_y
+    # )
+
+    return (before_bec_kde, after_bec_kde, wasserstein_before, wasserstein_after, wasserstein_total)
 
