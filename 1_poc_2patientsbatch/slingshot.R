@@ -14,83 +14,6 @@ run_slingshot <- function(sce, ad, reducedDim) {
   return(ss_result)
 }
 
-
-#############
-# SCANORAMA #
-#############
-
-scanorama <- anndataR::read_h5ad("1_poc_2patientsbatch/data/scanorama.h5ad")
-sce_scanorama <- anndataR::to_SingleCellExperiment(scanorama)
-
-scanorama_res <- run_slingshot(sce_scanorama, scanorama, "X_scanorama")
-anndataR::write_h5ad(
-  scanorama_res,
-  "1_poc_2patientsbatch/data/scanorama_slingshot.h5ad",
-  mode = "w"
-)
-
-###########
-# SCGEN 1 #
-###########
-
-scgen1 <- anndataR::read_h5ad("1_poc_2patientsbatch/data/scgen1.h5ad")
-sce_scgen1 <- scgen1$as_SingleCellExperiment(scgen1)
-
-scgen1_result <- slingshot::slingshot(
-  sce_scgen1,
-  cl = scgen1$obs$leiden1,
-  reducedDim = "corrected_latent",
-  start.clus = 1,
-  end.clus = c(4, 3)
-)
-colData(scgen1_result)$slingshot <- c()
-scgen1_ad_res <- anndataR::as_AnnData(scgen1_result)
-anndataR::write_h5ad(
-  scgen1_ad_res,
-  "1_poc_2patientsbatch/data/scgen1_slingshot.h5ad",
-  mode = "w"
-)
-
-###########
-# SCGEN 2 #
-###########
-
-scgen2 <- anndataR::read_h5ad("1_poc_2patientsbatch/data/scgen2.h5ad")
-sce_scgen2 <- scgen2$as_SingleCellExperiment()
-
-scgen2_res <- run_slingshot(sce_scgen2, scgen2, "corrected_latent")
-
-anndataR::write_h5ad(
-  scgen2_res,
-  "1_poc_2patientsbatch/data/scgen2_slingshot.h5ad",
-  mode = "w"
-)
-
-###########
-# FASTMNN #
-###########
-
-fastmnn <- anndataR::read_h5ad("1_poc_2patientsbatch/data/fastmnn.h5ad")
-sce_fastmnn <- fastmnn$as_SingleCellExperiment()
-
-# change of dist method cf https://github.com/kstreet13/slingshot/issues/87
-fastmnn_result <- slingshot::slingshot(
-  sce_fastmnn,
-  cl = fastmnn$obs$leiden1,
-  reducedDim = "X_fastmnn",
-  start.clus = 3,
-  end.clus = c(4, 1),
-  dist.method = "mnn"
-)
-colData(fastmnn_result)$slingshot <- c()
-
-# fastmnn_ad_res <- anndataR::from_SingleCellExperiment(fastmnn_result)
-anndataR::write_h5ad(
-  fastmnn_result,
-  "1_poc_2patientsbatch/data/fastmnn_slingshot.h5ad",
-  mode = "w"
-)
-
 ##############
 # preprocess #
 ##############
@@ -139,3 +62,58 @@ anndataR::write_h5ad(
   "1_poc_2patientsbatch/data/dataset2_slingshot.h5ad",
   mode = "w"
 )
+
+#############
+# SCANORAMA #
+#############
+
+scanorama <- anndataR::read_h5ad("1_poc_2patientsbatch/data/scanorama.h5ad", as = "HDF5AnnData")
+sce_scanorama <- scanorama$as_SingleCellExperiment(scanorama)
+
+scanorama_res <- run_slingshot(sce_scanorama, scanorama, "X_scanorama")
+anndataR::write_h5ad(
+  scanorama_res,
+  "1_poc_2patientsbatch/data/scanorama_slingshot.h5ad",
+  mode = "w"
+)
+
+#########
+# SCGEN #
+#########
+
+scgen2 <- anndataR::read_h5ad("1_poc_2patientsbatch/data/scgen2.h5ad")
+sce_scgen2 <- scgen2$as_SingleCellExperiment()
+
+scgen2_res <- run_slingshot(sce_scgen2, scgen2, "corrected_latent")
+
+anndataR::write_h5ad(
+  scgen2_res,
+  "1_poc_2patientsbatch/data/scgen2_slingshot.h5ad",
+  mode = "w"
+)
+
+###########
+# FASTMNN #
+###########
+
+fastmnn <- anndataR::read_h5ad("1_poc_2patientsbatch/data/fastmnn.h5ad")
+sce_fastmnn <- fastmnn$as_SingleCellExperiment()
+
+# change of dist method cf https://github.com/kstreet13/slingshot/issues/87
+fastmnn_result <- slingshot::slingshot(
+  sce_fastmnn,
+  cl = fastmnn$obs$leiden1,
+  reducedDim = "X_fastmnn",
+  start.clus = 3,
+  end.clus = c(4, 1),
+  dist.method = "mnn"
+)
+colData(fastmnn_result)$slingshot <- c()
+
+# fastmnn_ad_res <- anndataR::from_SingleCellExperiment(fastmnn_result)
+anndataR::write_h5ad(
+  fastmnn_result,
+  "1_poc_2patientsbatch/data/fastmnn_slingshot.h5ad",
+  mode = "w"
+)
+

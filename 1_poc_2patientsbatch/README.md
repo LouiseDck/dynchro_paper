@@ -1,8 +1,12 @@
-# Aligning two patients with a batch effect
+# dynchro shows the effect of batch removal on trajectories and identifies premature stops
 
-This example demonstrates how to align two patients with a batch effect.
-We use generated data to simulate two patients, using `dyngen`. Afterwards, we align the patients and consider the differences between a classical analysis and one that takes the batch effect into account, up to the trajectory inference step.
+This usecase demonstrates how to align two patients with a batch effect.
+We use generated data to simulate two patients, using `dyngen`. Afterwards, we consider batch effect correction methods, and how dynchro can pinpoint issues with the batch effect correction methods.
 
-`1_generate_data.R` uses `dyngen` to generate the datasets.
-`2_preprocess/py` preprocesses the data of the two patients.
-`3_analysis.py` performs the analysis and visualises the results.
+## Workflow
+
+1. `1_generate_data.R` uses `dyngen` and `0_diverging_kinetics.R` to generate the datasets.
+2. `slingshot.R` runs slingshot, at different points in the process. Run the corresponding part of this script during preprocessing, or specific analysis.
+3. `2_preprocess.ipynb` preprocesses the two synthetic datasets.
+4. `3x_method` runs the corresponding method on the datasets. For fastmnn, run `3c_fastmnn.ipynb` first and switch to `3c_fastmnn.R` when asked to.
+5. `4_figures.ipynb` reproduces the paper figures exactly.

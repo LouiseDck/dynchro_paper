@@ -1,19 +1,16 @@
 library(dyngen)
-library(magrittr)
 library(dynwrap)
+library(anndata)
 library(dplyr)
 library(wrapr)
-library(anndata)
 
 source("1_poc_2patientsbatch/0_diverging_kinetics.R")
 
 set.seed(42)
 DEBUG <- FALSE
 
-#############################
-# This generates 2 datasets with a 99 procent batch effect
-#############################
-
+#' Generates two dyngen datasets with a batch effect introduced by modifying the kinetics of the second dataset.
+#' @param index A string to append to the filenames when saving the datasets.
 generate_batch_effect <- function(index) {
   backbone <- backbone_bifurcating()
 
@@ -49,67 +46,66 @@ generate_batch_effect <- function(index) {
       )
   }
 
-  # Generate the model up to a common part
+  # Generate the model up to the feature network, the common parts
   model_common <-
-    config %>%
-    generate_tf_network() %>%
+    config |>
+    generate_tf_network() |>
     generate_feature_network()
 
-  # Generate kinetics and gold standard and cells twice, resulting in slightly different cells
-  model_a <- model_common %>%
-    generate_kinetics() %>%
-    generate_gold_standard() %>%
+  # Generate kinetics and gold standard and cells twice, resulting in two models with slightly different cells
+  model_a <- model_common |>
+    generate_kinetics() |>
+    generate_gold_standard() |>
     generate_cells()
 
-  model_b <- model_common %>%
-    generate_kinetics() %>%
-    generate_gold_standard() %>%
+  model_b <- model_common |>
+    generate_kinetics() |>
+    generate_gold_standard() |>
     generate_cells()
 
-  # Generate the experiment for model a and convert to dyno dataset
-  model_a <- model_a %>% generate_experiment()
-  dataset_a <- model_a %>% as_dyno()
+  # Generate the experiment for model_a and convert to dyno dataset
+  model_a <- model_a |> generate_experiment()
+  dataset_a <- model_a |> as_dyno()
 
-  # Set iroot, keep model info and milestones info and convert to anndata format
-  a1 <- dataset_a$milestone_percentages %>% filter(milestone_id == "sA")
-  a1 <- a1[orderv(a1[, "percentage"]), ][1, 1]$cell_id
-  adata_ds <- as_anndata(model_a)
-  adata_ds$obs[["model"]] <- dataset_a$cell_info[["model"]]
-  adata_ds$obs[["milestones"]] <- dataset_a$progressions$to
-  adata_ds$uns[["iroot"]] <- a1
-
-  anndata::write_h5ad(
-    adata_ds,
-    paste0("1_poc_2patientsbatch/data/dataseta", index, ".h5ad")
-  )
-
-  saveRDS(
-    dataset_a,
-    paste0("1_poc_2patientsbatch/data/dataseta", index, ".rds")
-  )
+  # convert to anndata and save objects
+  adata_ds_a <- convert_anndata(model_a, dataset_a)
+  save_objects(dataset_a, adata_ds_a, paste0("1_poc_2patientsbatch/data/dataseta", index))
 
   # Generate the experiment for model b and convert to dyno dataset
   # Use diverging kinetics to introduce batch effect
   model_between2 <- generate_diverging_kinetics(model_a, model_b, 0.99)
-  dataset_between <- model_between2 %>% as_dyno()
+  dataset_between <- model_between2 |> as_dyno()
 
-  # Set iroot, keep model info and milestones info and convert to anndata format
-  b1 <- dataset_between$milestone_percentages %>% filter(milestone_id == "sA")
-  b1 <- b1[orderv(b1[, "percentage"]), ][1, 1]$cell_id
+  adata_ds_btwn <- convert_anndata(model_between2, dataset_between)
+  save_objects(dataset_between, adata_ds_btwn, paste0("1_poc_2patientsbatch/data/datasetb", index))
+}
 
-  adata_btwn <- as_anndata(model_between2)
-  adata_btwn$obs[["model"]] <- dataset_between$cell_info[["model"]]
-  adata_btwn$obs[["milestones"]] <- dataset_between$progressions$to
-  adata_btwn$uns[["iroot"]] <- b1
-  anndata::write_h5ad(
-    adata_btwn,
-    paste0("1_poc_2patientsbatch/data/datasetb", index, ".h5ad")
+#' Helper function to convert dyngen model and dataset to anndata format, keeping some metadata.
+#' @param dyngen_model A dyngen model object.
+#' @param dyngen_dataset A dyngen dataset object.
+#' @return An anndata object with the expression data and metadata, such as model, milestones and root cell.
+convert_anndata <- function(dyngen_model, dyngen_dataset) {
+  print(dyngen_dataset$milestone_percentages)
+  sA_cells <- dyngen_dataset$milestone_percentages |> dplyr::filter(milestone_id == "sA")
+  root <- sA_cells[wrapr::orderv(sA_cells[, "percentage"]), ][1, 1]$cell_id
+
+  adata_ds <- dyngen::as_anndata(dyngen_model)
+  adata_ds$obs[["model"]] <- dyngen_dataset$cell_info[["model"]]
+  adata_ds$obs[["milestones"]] <- dyngen_dataset$progressions$to
+  adata_ds$uns[["iroot"]] <- root
+  adata_ds
+}
+
+save_objects <- function(dataset, anndata, path) {
+  saveRDS(
+    dataset,
+    paste0(path, ".rds")
   )
 
-  saveRDS(
-    dataset_between,
-    paste0("1_poc_2patientsbatch/data/datasetb", index, ".rds")
+  anndata::write_h5ad(
+    anndata,
+    paste0(path, ".h5ad")
   )
 }
 
-generate_batch_effect(0)
+generate_batch_effect("test")
