@@ -14,6 +14,10 @@ from pandas.api.types import is_string_dtype
 from sklearn.decomposition import PCA as sklearnPCA
 from sklearn.manifold import LocallyLinearEmbedding, TSNE, SpectralEmbedding
 
+# This file contains STREAM utility functions, necessary for the analysis of the data.
+# They are included here, as the STREAM package no longer installs and runs correctly.
+# See: https://github.com/pinellolab/STREAM
+
 def project_point_to_curve_distance(XP,p):
     curve = geom.LineString(XP)
     point = geom.Point(p)
@@ -114,7 +118,6 @@ def select_variable_genes(
         plt.savefig(os.path.join(fig_path,fig_name),pad_inches=1,bbox_inches='tight')
         plt.close(fig)
     return None
-
 
 def plot_visualization_2D(adata,method='umap',n_neighbors=50, nb_pct=None,perplexity=30.0,color=None,use_precomputed=True,
                           fig_size=None,fig_ncol=3,fig_legend_ncol=1,fig_legend_order = None,
