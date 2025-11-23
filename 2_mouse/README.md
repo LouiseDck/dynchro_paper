@@ -9,4 +9,4 @@ This data was used by trajectory inference tools, such as [STREAM](https://doi.o
 1. `utils.py` contains functions lifted from [the STREAM TI tool](https://github.com/pinellolab/STREAM), in order to be able to run the analysis performed by the now failing tool.
 2. `1_prep_data.ipynb` details the STREAM preprocessing the data undergoes
 3. `2_dynchro.ipynb` details the dynchro analysis
-4. `3_figures.ipynb` reproduces the paper figures exactly.
+4. `3_figures_paper.ipynb` reproduces the paper figures exactly.
